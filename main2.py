@@ -76,7 +76,7 @@ class Model:
 class Acrobot:
     def __init__(self):
         self.episodes = 1000
-        self.timesteps = 200
+        self.timesteps = 500
         self.score = []
 
         self.env = gym.make('Acrobot-v1')
@@ -108,6 +108,9 @@ class Acrobot:
                 if done or t == self.timesteps-1:
                     print('Episode :', e, ', Score :', t+1)
                     self.score.append(t + 1)
+                    f = open('data.txt', 'w')
+                    f.write(str(self.score))
+                    f.close()
                     break
 
             self.modelClass.training()
