@@ -1,3 +1,4 @@
+import random
 import gym
 import numpy as np
 import matplotlib.pyplot as plt
@@ -32,32 +33,31 @@ class Model:
 
     def createModel(self):
         model = Sequential()
-        model.add(Dense(64, input_dim=self.stateSize, activation='relu'))
-        model.add(Dense(128, activation='relu'))
-        model.add(Dense(self.actionSize, activation='linear'))
+        model.add(Dense(128, input_dim=self.stateSize, activation='relu'))
+        model.add(Dense(64, activation='relu'))
+        model.add(Dense(self.actionSize, activation='softmax'))
 
         opt = tf.keras.optimizers.Adam(learning_rate=self.learning_rate)
         model.compile(optimizer=opt, loss='mse' )
         return model
         
-    def setModel(self):
-        self.createModel()
-        self.addDense()
 
     def training(self):
-        batch = np.sample(self.memory, self.batch_size)
-        
+        batch = random.sample(self.memory, self.batch_size)
+
         for state, action, reward, next_state, done in batch:
             target = reward
             if not done:
                 target = reward + self.alpha * np.amax(self.model.predict(next_state)[0])
             target_outputs = self.model.predict(state)
             target_outputs[0][action] = target
-            print("model fit")
                 
-            self.modelClass.model.fit(
+            self.model.fit(
+                state,
+                target_outputs,
                 epochs=1,
-                callbacks=[self.modelClass.cp_callbacks]
+                callbacks=[self.cp_callbacks],
+                verbose=0
             )
 
     def action(self, state):
@@ -95,12 +95,15 @@ class Acrobot:
             for t in range(self.timesteps):
                 self.env.render()
                 print(state)
-                action = self.modelClass.model.action(state)
+                # action = self.modelClass.action(state)
+                action = self.env.action_space.sample()
 
                 next_state, reward, done, _ = self.env.step(action)
                 next_state = np.reshape(next_state, [1, self.stateSize])
+                print(done)
 
                 self.modelClass.memorize((state, action, reward, next_state, done))
+                state = next_state
 
                 if done or t == self.timesteps-1:
                     print('Episode :', e, ', Score :', t+1)
@@ -123,8 +126,6 @@ class Acrobot:
 
 acrobot = Acrobot()
 acrobot.running()
-
-
-
+acrobot.showGraph()
 
 

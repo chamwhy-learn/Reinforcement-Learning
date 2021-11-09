@@ -39,10 +39,9 @@ for i in range(100):
         else:
             predict = model.predict(state)
             action = np.argmax(predict)
-
         next_state, reward, done, _ = env.step(action)
         next_state = np.reshape(next_state, [1, 4])
-
+        print(done)
         memory.append((state, action, reward, next_state, done))
         state = next_state
 
@@ -54,14 +53,13 @@ for i in range(100):
     # Training
     if i > 10:
         minibatch = random.sample(memory, 16)
-
+        
         for state, action, reward, next_state, done in minibatch:
             target = reward
             if not done:
                 target = reward + 0.9 * np.amax(model.predict(next_state)[0])
             target_outputs = model.predict(state)
             target_outputs[0][action] = target
-            print("model fit")
             model.fit(state, target_outputs, epochs=1, verbose=0)
 
 env.close()
